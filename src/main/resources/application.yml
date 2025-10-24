@@ -1,3 +1,9 @@
+com:
+  star:
+    jwt:
+      secret-key: starLi
+      exp : 3600000;
+      token-name : authentication
 spring:
   application:
     name: HighConcurrent

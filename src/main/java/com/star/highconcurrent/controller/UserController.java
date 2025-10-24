@@ -3,6 +3,7 @@ package com.star.highconcurrent.controller;
 import com.github.xiaoymin.knife4j.annotations.ApiOperationSupport;
 import com.star.highconcurrent.common.BaseResponse;
 import com.star.highconcurrent.common.Code;
+import com.star.highconcurrent.model.entity.Login;
 import com.star.highconcurrent.model.entity.User;
 import com.star.highconcurrent.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -51,6 +52,18 @@ public class UserController {
         return service.register(user);
     }
 
-
-
+    public BaseResponse<String> login(@RequestBody Login login){
+        // 健壮性校验
+        if (login == null){
+            return new BaseResponse<>(Code.LOGIN_ERROR);
+        }
+        String email = login.getEmail();
+        String password = login.getPassword();
+        // 判空处理
+        if (StringUtils.isAnyBlank(email,password)){
+            return new BaseResponse<>(Code.LOGIN_ERROR);
+        }
+        // 交到service处理
+        return service.login(login);
+    }
 }

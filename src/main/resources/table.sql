@@ -3,22 +3,25 @@ create database IF NOT EXISTS HighCurrent;
 use HighCurrent;
 -- 创建数据库表
 -- 用户表
-CREATE TABLE IF NOT EXISTS `user` (
-                                      `id` bigint NOT NULL AUTO_INCREMENT COMMENT '用户唯一ID',
-                                      `username` varchar(50) NOT NULL COMMENT '用户名（登录用）',
-                                      `password` varchar(128) NOT NULL COMMENT '加密后的密码（MD5算法）',
-                                      `nickname` varchar(50) DEFAULT '' COMMENT '用户昵称',
-                                      `avatar` varchar(255) DEFAULT '' COMMENT '头像URL',
-                                      `email` varchar(100) NOT NULL COMMENT '邮箱（用于验证/找回密码）',
-                                      `status` tinyint DEFAULT 1 COMMENT '状态（0-禁用，1-正常）',
-                                      `is_delete` tinyint DEFAULT 1 COMMENT '逻辑删除字段(0-删除,1-未删除)',
-                                      `created_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                      `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                                      PRIMARY KEY (`id`),
-                                      UNIQUE KEY `uk_username` (`username`),
-                                      UNIQUE KEY `uk_email` (`email`),
-                                      INDEX `idx_created_at` (`created_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
+CREATE TABLE `user` (
+                        `id` bigint NOT NULL AUTO_INCREMENT COMMENT '用户唯一ID',
+                        `username` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '用户名（登录用）',
+                        `password` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '加密后的密码（MD5算法）',
+                        `nickname` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '用户昵称',
+                        `avatar` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '头像URL',
+                        `email` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '邮箱（用于验证/找回密码）',
+                        `status` tinyint DEFAULT '1' COMMENT '状态（0-禁用，1-正常）',
+                        `is_delete` tinyint DEFAULT '1' COMMENT '逻辑删除字段(0-删除,1-未删除)',
+                        `created_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                        `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                        PRIMARY KEY (`id`),
+                        UNIQUE KEY `uk_username` (`username`),
+                        UNIQUE KEY `uk_email` (`email`),
+                        KEY `idx_created_at` (`created_at`),
+                        KEY `user_available_index` (`email`,`is_delete`,`status`) COMMENT '用户存在索引'
+) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
+
+
 
 -- 博客表
 CREATE TABLE IF NOT EXISTS `blog` (
