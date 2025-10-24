@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS `user` (
                                       `avatar` varchar(255) DEFAULT '' COMMENT '头像URL',
                                       `email` varchar(100) NOT NULL COMMENT '邮箱（用于验证/找回密码）',
                                       `status` tinyint DEFAULT 1 COMMENT '状态（0-禁用，1-正常）',
-                                      `delete` tinyint DEFAULT 1 COMMENT '逻辑删除字段(0-删除,1-未删除)',
+                                      `is_delete` tinyint DEFAULT 1 COMMENT '逻辑删除字段(0-删除,1-未删除)',
                                       `created_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                                       `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                                       PRIMARY KEY (`id`),
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS `blog_content` (
                                               `content` longtext NOT NULL COMMENT '博客正文（支持Markdown/HTML）',
                                               `created_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                                               `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                                              `delete` tinyint default 1 COMMENT '0-删除,1-正常',
+                                              `is_delete` tinyint default 1 COMMENT '0-删除,1-正常',
                                               PRIMARY KEY (`id`),
                                               UNIQUE KEY `uk_blog_id` (`blog_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='博客内容表（大文本拆分）';

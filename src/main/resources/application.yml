@@ -6,12 +6,45 @@ spring:
     url: jdbc:mysql://localhost:3306/highcurrent
     username: root
     password: 1234
-  redis:
-    database: 5
-    host: 192.168.220.128
-    port: 6379
-    timeout: 5000
-    password: 123456
+  data:
+    redis:
+      database: 5
+      host: 192.168.220.128
+      port: 6379
+      timeout: 5000
+      password: 123456
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true # 开启驼峰映射
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      #生成文档所需的扫包路径，一般为启动类目录
+      packages-to-scan: com.star.highconcurrent.controller
+
+
+#knife4j配置
+knife4j:
+  #是否启用增强设置
+  enable: true
+  #开启生产环境屏蔽
+  production: false
+  #是否启用登录认证
+  basic:
+    enable: true
+    username: admin
+    password: 123456
+  setting:
+    language: zh_cn
+    enable-version: true
+    enable-swagger-models: true
+    swagger-model-name: 用户模块
+

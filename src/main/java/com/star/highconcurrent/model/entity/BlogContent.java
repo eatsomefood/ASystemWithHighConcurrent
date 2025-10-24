@@ -56,7 +56,7 @@ public class BlogContent implements Serializable {
     /**
      * 0-删除,1-正常
      */
-    @TableField("delete")
+    @TableField("is_delete")
     private Integer delete;
 
 

@@ -68,7 +68,7 @@ public class User implements Serializable {
     /**
      * 逻辑删除字段(0-删除,1-未删除)
      */
-    @TableField("delete")
+    @TableField("is_delete")
     private Integer delete;
 
     /**
