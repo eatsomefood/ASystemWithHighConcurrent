@@ -22,7 +22,7 @@ public class RedissonConfig {
     private String password;
 
     // 读取数据库索引
-    @Value("${spring.redis.database:0}")
+    @Value("${spring.data.redis.database:0}")
     private int database;
 
     @Bean(destroyMethod = "shutdown",name = "RedissonClient") // 容器销毁时自动关闭客户端

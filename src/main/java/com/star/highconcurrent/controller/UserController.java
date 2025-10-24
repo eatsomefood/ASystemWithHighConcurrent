@@ -11,10 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "用户管理")
 @RequestMapping("/user")
@@ -52,6 +49,8 @@ public class UserController {
         return service.register(user);
     }
 
+    @Operation(description = "登录")
+    @PostMapping("/login")
     public BaseResponse<String> login(@RequestBody Login login){
         // 健壮性校验
         if (login == null){

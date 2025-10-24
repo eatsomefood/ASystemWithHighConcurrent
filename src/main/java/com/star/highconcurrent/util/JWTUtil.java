@@ -5,20 +5,21 @@ import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
 
+@Configuration
 public class JWTUtil {
 
-    @Value("${com.star.jwt.secret-key:star}")
-    private static String secretKey;
+    private static String secretKey = "5f4dcc3b5aa765d61d8327deb882cf99a61c41e383d3a7e92b64819fa0e264";
     // 设置签名
     private static final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
     // 过期时间
-    @Value("${com.star.jwt.exp:360000}")
-    private static Long ttl;
+    private static Long ttl = 3600000L;
     private static final String SUBJECT = "ALL";
     // 加密JWT令牌
     public static String createJwt(Map<String, Object> claims) {
