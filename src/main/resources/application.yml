@@ -6,6 +6,12 @@ spring:
     url: jdbc:mysql://localhost:3306/highcurrent
     username: root
     password: 1234
+  redis:
+    database: 5
+    host: 192.168.220.128
+    port: 6379
+    timeout: 5000
+    password: 123456
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true # 开启驼峰映射
