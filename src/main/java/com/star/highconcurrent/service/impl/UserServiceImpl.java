@@ -1,6 +1,7 @@
 package com.star.highconcurrent.service.impl;
 
 import cn.hutool.crypto.digest.BCrypt;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.highconcurrent.common.BaseResponse;
 import com.star.highconcurrent.common.Code;
 import com.star.highconcurrent.mapper.UserMapper;
@@ -18,19 +19,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements UserService {
     @Resource
     private UserMapper mapper;
 
     @Resource
-    private RedisTemplate<String, String> template;
-
-    @Resource
     private RedissonClient client;
 
+    @Resource
+    private JWTUtil jwtUtil;
+
     private final String USER_KEY = "user:";
-    @Autowired
-    private RedisTemplate<Object, Object> redisTemplate;
+
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
 
     public BaseResponse<String> register(User user) {
         // 尝试密码MD5加密
@@ -68,9 +70,9 @@ public class UserServiceImpl implements UserService {
             claims.put("nickName",user.getNickname());
             claims.put("email",user.getEmail());
             claims.put("avatar",user.getAvatar());
-            String jwt = JWTUtil.createJwt(claims);
+            String jwt = jwtUtil.createJwt(claims);
             redisTemplate.opsForValue().set(USER_KEY + "login:" + user.getId(),jwt);
-            return new BaseResponse<>(Code.OK, "登录成功");
+            return new BaseResponse<>(Code.LOGIN_SUCCESS, jwt);
         } else {
             return new BaseResponse<>(Code.PASSWORD_ERROR);
         }

@@ -15,7 +15,6 @@ import org.springframework.core.env.Environment;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-@EnableConfigurationProperties
 @Slf4j
 @MapperScan("com.star.highconcurrent.mapper")
 @SpringBootApplication
@@ -34,6 +33,9 @@ public class HighConcurrentApplication {
             protocol = "https";
         }
         String serverPort = env.getProperty("server.port:8080");
+        if (serverPort == null){
+            serverPort = "8080";
+        }
         String contextPath = env.getProperty("server.servlet.context-path");
         if (StringUtils.isBlank(contextPath)) {
             contextPath = "/doc.html";
