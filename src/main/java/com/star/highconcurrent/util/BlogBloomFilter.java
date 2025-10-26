@@ -16,9 +16,9 @@ import java.util.List;
 
 @Slf4j
 @Component
-public class BloomFilter implements CommandLineRunner {
+public class BlogBloomFilter implements CommandLineRunner {
 
-    private static Long dataSize = 0L;
+    private Long dataSize = 0L;
 
     private final BitMapBloomFilter filter = new BitMapBloomFilter(100);
 
@@ -50,7 +50,7 @@ public class BloomFilter implements CommandLineRunner {
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
-            log.debug("当前数据库博客总数为:{}",dataSize);
+            log.info("当前数据库博客总数为:{}",dataSize);
             if (cursor != null) {
                 try {
                     cursor.close();
@@ -66,6 +66,10 @@ public class BloomFilter implements CommandLineRunner {
         for (Long l : list) {
             filter.add(String.valueOf(l));
         }
+    }
+
+    public void addData(long id){
+        filter.add(String.valueOf(id));
     }
 
     @Override

@@ -2,7 +2,9 @@ package com.star.highconcurrent.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.star.highconcurrent.model.entity.Comment;
+import com.star.highconcurrent.model.entity.LikeRecord;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * <p>
@@ -15,4 +17,6 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface CommentMapper extends BaseMapper<Comment> {
 
+    @Select("select * from comment where status = 1 and id = #{targetId}")
+    Comment selectCommentExist(Long targetId);
 }

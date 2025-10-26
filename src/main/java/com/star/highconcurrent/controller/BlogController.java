@@ -3,10 +3,9 @@ package com.star.highconcurrent.controller;
 import com.star.highconcurrent.common.BaseResponse;
 import com.star.highconcurrent.common.Code;
 import com.star.highconcurrent.model.entity.Blog;
-import com.star.highconcurrent.model.entity.LikeRecord;
 import com.star.highconcurrent.model.entity.Page;
 import com.star.highconcurrent.service.BlogService;
-import com.star.highconcurrent.util.BloomFilter;
+import com.star.highconcurrent.util.BlogBloomFilter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -26,7 +25,7 @@ public class BlogController {
     private BlogService service;
 
     @Resource
-    private BloomFilter filter;
+    private BlogBloomFilter filter;
 
     // 查询博客
     @Operation()

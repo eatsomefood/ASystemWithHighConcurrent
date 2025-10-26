@@ -3,8 +3,12 @@ package com.star.highconcurrent.service.impl;
 import com.star.highconcurrent.common.BaseResponse;
 import com.star.highconcurrent.common.Code;
 import com.star.highconcurrent.common.PathEnum;
+import com.star.highconcurrent.mapper.BlogMapper;
+import com.star.highconcurrent.mapper.CommentMapper;
 import com.star.highconcurrent.mapper.UserMapper;
 import com.star.highconcurrent.model.dto.LikeRecordDto;
+import com.star.highconcurrent.model.entity.Blog;
+import com.star.highconcurrent.model.entity.Comment;
 import com.star.highconcurrent.model.entity.LikeRecord;
 import com.star.highconcurrent.mapper.LikeRecordMapper;
 import com.star.highconcurrent.service.LikeRecordService;
@@ -50,6 +54,12 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
     private RedissonClient client;
 
     @Resource
+    private CommentMapper commentMapper;
+
+    @Resource
+    private BlogMapper blogMapper;
+
+    @Resource
     private LikeRecordMapper mapper;
 
     @Resource
@@ -73,6 +83,18 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
      */
     @Override
     public BaseResponse<String> like(LikeRecordDto record) {
+        // 先查数据库有没有这个博客
+        if (record.getTargetType() == 1){
+            Blog blog = blogMapper.selectBlogExist(record.getTargetId());
+            if (blog == null){
+                return new BaseResponse<>(Code.BLOG_NOT_FOUND);
+            }
+        }else {
+            Comment Comment = commentMapper.selectCommentExist(record.getTargetId());
+            if (Comment == null){
+                return new BaseResponse<>(Code.COMMENT_NOT_FOUND);
+            }
+        }
         int currentRetrySize = 0;
         boolean success = false;
         while (currentRetrySize < retrySize) {
@@ -100,6 +122,18 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
      */
     @Override
     public BaseResponse<String> unLike(LikeRecordDto record) {
+        // 先查数据库有没有这个博客
+        if (record.getTargetType() == 1){
+            Blog blog = blogMapper.selectBlogExist(record.getTargetId());
+            if (blog == null){
+                return new BaseResponse<>(Code.BLOG_NOT_FOUND);
+            }
+        }else {
+            Comment Comment = commentMapper.selectCommentExist(record.getTargetId());
+            if (Comment == null){
+                return new BaseResponse<>(Code.COMMENT_NOT_FOUND);
+            }
+        }
         int currentRetrySize = 0;
         boolean success = false;
         while (currentRetrySize < retrySize) {

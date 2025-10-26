@@ -6,6 +6,7 @@ import com.star.highconcurrent.common.Code;
 import com.star.highconcurrent.model.dto.LikeRecordDto;
 import com.star.highconcurrent.model.entity.LikeRecord;
 import com.star.highconcurrent.service.LikeRecordService;
+import com.star.highconcurrent.util.BlogBloomFilter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -31,22 +32,25 @@ public class LikeRecordController {
     @Resource
     private LikeRecordService service;
 
+    @Resource
+    private BlogBloomFilter filter;
+
     @Operation(description = "点赞")
     @PostMapping("/like")
     public BaseResponse<String> like(@RequestBody LikeRecordDto record) {
-        if(record == null){
+        if (record == null || (record.getTargetType() == 1 && !filter.isValid(record.getTargetId()))) {
             return new BaseResponse(Code.PARAM_ERROR);
-        }else {
+        } else {
             return service.like(record);
         }
     }
 
     @Operation(description = "取消点赞")
     @PostMapping("/unlike")
-    public BaseResponse<String> unLike(@RequestBody LikeRecordDto record){
-        if (record == null){
+    public BaseResponse<String> unLike(@RequestBody LikeRecordDto record) {
+        if (record == null || (record.getTargetType() == 1 && !filter.isValid(record.getTargetId()))) {
             return new BaseResponse<>(Code.PARAM_ERROR);
-        }else {
+        } else {
             return service.unLike(record);
         }
     }
