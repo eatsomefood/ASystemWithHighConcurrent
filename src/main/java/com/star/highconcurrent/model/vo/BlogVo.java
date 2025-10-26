@@ -52,7 +52,7 @@ public class BlogVo implements Serializable {
 
     public void updateUser(Map<String,Object> user){
         this.authorName = user.get("nickName").toString();
-        this.authorAvatar = user.get("avator").toString();
+        this.authorAvatar = user.get("avatar").toString();
     }
 
     public void updateContent(BlogContent content){

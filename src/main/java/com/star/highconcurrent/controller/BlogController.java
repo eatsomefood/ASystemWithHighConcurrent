@@ -36,7 +36,7 @@ public class BlogController {
             return new BaseResponse<>(Code.PARAM_ERROR);
         }
         // 查业务
-        return service.getBlogById(id);
+        return service.getDeclareBlogById(id);
     }
 
     @Operation(description = "分页查询")

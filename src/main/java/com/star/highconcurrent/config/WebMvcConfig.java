@@ -24,7 +24,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/v3/api-docs",
                         "/swagger-resources/**",
                         "/webjars/**",
-                        "/doc.html"
+                        "/doc.html",
+                        "/favicon.ico",
+                        "/error"
                 );
     }
 }

@@ -12,15 +12,10 @@ import java.util.Map;
 @Component
 public class UserContext {
 
-    private static ThreadLocal<Map<String,Object>> threadLocal ;
+    private static ThreadLocal<Map<String,Object>> threadLocal = new ThreadLocal<>() ;
 
     public static Map<String,Object> getUser(){
         return threadLocal.get();
-    }
-
-    @PostConstruct
-    private void initThreadLocal(){
-        threadLocal = new ThreadLocal<>();
     }
 
     public static void putUser(Map<String,Object> map){

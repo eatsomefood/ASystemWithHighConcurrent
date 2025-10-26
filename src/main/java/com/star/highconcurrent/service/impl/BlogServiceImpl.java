@@ -44,7 +44,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements Bl
     private CommentMapper commentMapper;
 
     @Override
-    public BaseResponse getBlogById(long id) {
+    public BaseResponse getDeclareBlogById(long id) {
         Blog blog = blogMapper.selectById(id);
         if (blog == null){
             return new BaseResponse<>(Code.DATABASE_ERROR);
@@ -60,7 +60,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements Bl
             Page<Comment> page = new Page<>(0,pageSize);
             QueryWrapper<Comment> queryWrapper = Wrappers.<Comment>query().
                     eq("blog_id", blog.getId()).
-                    orderByDesc("create_at");
+                    orderByDesc("created_at");
             Page<Comment> commentPage = commentMapper.selectPage(page, queryWrapper);
             List<Comment> records = commentPage.getRecords();
             vo.setComments(records);

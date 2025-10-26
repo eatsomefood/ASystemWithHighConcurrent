@@ -6,5 +6,5 @@ import com.star.highconcurrent.model.entity.Blog;
 
 public interface BlogService extends IService<Blog> {
 
-    BaseResponse<String> getBlogById(long id);
+    BaseResponse<String> getDeclareBlogById(long id);
 }
