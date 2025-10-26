@@ -21,13 +21,13 @@ public class JWTUtil {
     /**
      * 签名密钥（建议在配置文件中配置，长度至少 256 位以满足 HS256 要求）
      */
-    @Value("${jwt.secret:5f4dcc3b5aa765d61d8327deb882cf99a61c41e383d3a7e92b64819fa0e264}")
+    @Value("${com.star.jwt.secret-key:5f4dcc3b5aa765d61d8327deb882cf99a61c41e383d3a7e92b64819fa0e264}")
     private String secretKey;
 
     /**
      * 令牌过期时间（毫秒，默认 1 小时）
      */
-    @Value("${jwt.ttl:3600000}")
+    @Value("${com.star.jwt.exp:3600000}")
     private Long ttl;
 
     private static final String SUBJECT = "ALL";

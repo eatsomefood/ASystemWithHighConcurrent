@@ -1,7 +1,6 @@
 package com.star.highconcurrent.interceptor;
 
 import com.star.highconcurrent.common.PathEnum;
-import com.star.highconcurrent.model.entity.User;
 import com.star.highconcurrent.util.JWTUtil;
 import com.star.highconcurrent.util.UserContext;
 import jakarta.annotation.Resource;
@@ -10,15 +9,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.Map;
-import java.util.Objects;
 
 @Component
 @Slf4j

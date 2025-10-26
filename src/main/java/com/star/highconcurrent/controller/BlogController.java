@@ -3,6 +3,7 @@ package com.star.highconcurrent.controller;
 import com.github.xiaoymin.knife4j.annotations.ApiOperationSupport;
 import com.star.highconcurrent.common.BaseResponse;
 import com.star.highconcurrent.common.Code;
+import com.star.highconcurrent.model.entity.Blog;
 import com.star.highconcurrent.service.BlogService;
 import com.star.highconcurrent.util.BloomFilter;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,6 +11,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RequestMapping("/blog")
@@ -27,7 +30,7 @@ public class BlogController {
     // 查询博客
     @Operation()
     @GetMapping("/{id}")
-    public BaseResponse getBolgById(@PathVariable("id") long id) {
+    public BaseResponse getDeclareBlogById(@PathVariable("id") long id) {
         // 先查健壮性和布隆过滤器
         if (id <= 0 || !filter.isValid(id)) {
             return new BaseResponse<>(Code.PARAM_ERROR);
@@ -36,4 +39,9 @@ public class BlogController {
         return service.getBlogById(id);
     }
 
+    @Operation(description = "分页查询")
+    @PostMapping("/list")
+    public BaseResponse<List<Blog>> getBlogList() {
+        return null;
+    }
 }
