@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.io.Serializable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 /**
@@ -15,6 +16,7 @@ import lombok.experimental.Accessors;
  * @author star
  * @since 2025-10-24
  */
+@ToString
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)

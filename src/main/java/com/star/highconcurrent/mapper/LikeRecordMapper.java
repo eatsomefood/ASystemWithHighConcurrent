@@ -1,8 +1,13 @@
 package com.star.highconcurrent.mapper;
 
+import com.star.highconcurrent.model.dto.LikeRecordDto;
 import com.star.highconcurrent.model.entity.LikeRecord;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
+
+import javax.xml.bind.annotation.XmlSeeAlso;
 
 /**
  * <p>
@@ -15,4 +20,18 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface LikeRecordMapper extends BaseMapper<LikeRecord> {
 
+    @Select("select * " +
+            "from like_record " +
+            "where " +
+            "status = 1 and " +
+            "user_id = #{userId} and " +
+            "target_type = #{targetType} and " +
+            "target_id = #{targetId}")
+    LikeRecord selectLikeByRecord(LikeRecordDto record);
+
+    @Insert("insert into " +
+            "like_record(user_id, target_type, target_id, status) " +
+            "values " +
+            "(#{userId},#{targetType},#{targetId},#{status})")
+    void insertByDto(LikeRecordDto record);
 }

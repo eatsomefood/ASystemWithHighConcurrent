@@ -14,6 +14,6 @@ public interface BlogService extends IService<Blog> {
 
     BaseResponse<List<Blog>> getListByPage(Page page);
 
-    BaseResponse<String> like(LikeRecord like);
+
 
 }

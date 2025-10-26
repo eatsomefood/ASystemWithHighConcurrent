@@ -46,13 +46,4 @@ public class BlogController {
         return service.getListByPage(page);
     }
 
-    @Operation(description = "点赞")
-    @PostMapping("/like")
-    public BaseResponse<String> like(@RequestBody LikeRecord record) {
-        if(record == null){
-            return new BaseResponse(Code.PARAM_ERROR);
-        }else {
-            return service.like(record);
-        }
-    }
 }
