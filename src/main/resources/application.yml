@@ -7,6 +7,9 @@ server:
       charset: UTF-8
 com:
   star:
+    retry:
+      retry-size: 3
+      retry-ttl: 300
     comment:
       page-size: 10
     jwt:

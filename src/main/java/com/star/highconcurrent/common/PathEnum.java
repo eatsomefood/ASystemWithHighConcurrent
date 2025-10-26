@@ -1,7 +1,8 @@
 package com.star.highconcurrent.common;
 
 public enum PathEnum {
-    USER_LOGIN("user:login:");
+    USER_LOGIN("user:login:"),
+    USER_LIKE("blog:like:");
 
     private final String path;
 

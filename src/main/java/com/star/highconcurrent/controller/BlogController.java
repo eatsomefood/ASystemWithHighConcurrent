@@ -1,9 +1,9 @@
 package com.star.highconcurrent.controller;
 
-import com.github.xiaoymin.knife4j.annotations.ApiOperationSupport;
 import com.star.highconcurrent.common.BaseResponse;
 import com.star.highconcurrent.common.Code;
 import com.star.highconcurrent.model.entity.Blog;
+import com.star.highconcurrent.model.entity.LikeRecord;
 import com.star.highconcurrent.model.entity.Page;
 import com.star.highconcurrent.service.BlogService;
 import com.star.highconcurrent.util.BloomFilter;
@@ -44,5 +44,15 @@ public class BlogController {
     @PostMapping("/list")
     public BaseResponse<List<Blog>> getBlogList(@RequestBody Page page) {
         return service.getListByPage(page);
+    }
+
+    @Operation(description = "点赞")
+    @PostMapping("/like")
+    public BaseResponse<String> like(@RequestBody LikeRecord record) {
+        if(record == null){
+            return new BaseResponse(Code.PARAM_ERROR);
+        }else {
+            return service.like(record);
+        }
     }
 }

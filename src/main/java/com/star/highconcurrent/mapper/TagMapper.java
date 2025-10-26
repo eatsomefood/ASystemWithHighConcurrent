@@ -1,18 +1,18 @@
 package com.star.highconcurrent.mapper;
 
+import com.star.highconcurrent.model.entity.Tag;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.star.highconcurrent.model.entity.Comment;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
  * <p>
- * 评论表（支持多级回复） Mapper 接口
+ * 标签表 Mapper 接口
  * </p>
  *
  * @author star
  * @since 2025-10-26
  */
 @Mapper
-public interface CommentMapper extends BaseMapper<Comment> {
+public interface TagMapper extends BaseMapper<Tag> {
 
 }
