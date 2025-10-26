@@ -82,11 +82,105 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
             }
             try {
                 Thread.sleep(retryTtl);
+                currentRetrySize++;
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
         return new BaseResponse<>(Code.LIKE_FAIL);
+    }
+
+    /**
+     * TODO
+     * 当前是本地重试
+     * 再更新到mq后，实现死信队列重试
+     *
+     * @param record
+     * @return
+     */
+    @Override
+    public BaseResponse<String> unLike(LikeRecordDto record) {
+        int currentRetrySize = 0;
+        boolean success = false;
+        while (currentRetrySize < retrySize) {
+            success = doUnLike(record);
+            if (success) {
+                return new BaseResponse<>(Code.UNLIKE_SUCCESS);
+            }
+            try {
+                Thread.sleep(retryTtl);
+                currentRetrySize++;
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return new BaseResponse<>(Code.LIKE_FAIL);
+    }
+
+    public boolean doUnLike(LikeRecordDto record) {
+        // 先查看当前用户是否点赞过
+        String lockKey = PathEnum.LOCK_VALUE.getPath() + PREFIX + record.getUserId();
+        // 1.先查redis,没有再查mysql
+        String key;
+        if (record.getTargetType() == 1) {
+            key = PathEnum.BLOG_LIKE.getPath() + record.getTargetId();
+        } else {
+            key = PathEnum.COMMENT_LIKE.getPath() + record.getTargetId();
+        }
+        // 查看是否点赞
+        boolean member = Boolean.TRUE.equals(template.opsForSet().isMember(key, record.getUserId()));
+        // 点赞过，返回
+        if (!member) {
+            // 没点赞过，看看mysql有没有记录
+            LikeRecord currentDBRecord = mapper.selectLikeByRecord(record);
+            if (currentDBRecord != null) {
+                // 点赞成功，但是没有成功刷入redis，尝试刷入后返回
+                mapper.logicDelete(currentDBRecord);
+            }
+            return true;
+        } else {
+            // 尝试同时更改redis和mysql
+            RLock lock = client.getLock(lockKey);
+            try {
+                boolean isLock = lock.tryLock();
+                if (isLock) {
+                    // 获取锁成功
+                    // 开始写入redis跟mysql中
+                    LikeRecord currentDBRecord = mapper.selectLikeByRecord(record);
+                    // 没点赞过，获取分布式锁后，开始同步刷入
+                    // 开始mysql事务
+                    transactionTemplate.execute(new TransactionCallback<Boolean>() {
+
+                        @Override
+                        public Boolean doInTransaction(TransactionStatus status) {
+                            try {
+                                List<String> keys = List.of(key);
+                                Long[] arr = new Long[]{record.getUserId(), 0L};
+                                //lua脚本插入点赞
+                                Long execute = template.execute(LIKE_UPDATE_SCRIPT, keys, arr);
+                                if (execute == 0) {
+                                    // 脚本执行失败
+                                    return false;
+                                } else {
+                                    // 继续执行mysql逻辑
+                                    mapper.logicDelete(currentDBRecord);
+                                }
+                                return true;
+                            } catch (Exception e) {
+                                log.error("当前点赞执行失败:{}" + "/n" + record.toString(), e);
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                return false;
+            } finally {
+                lock.unlock();
+            }
+        }
+        return false;
     }
 
     public boolean doLike(LikeRecordDto record) {
@@ -127,7 +221,7 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
                             public Boolean doInTransaction(TransactionStatus status) {
                                 try {
                                     List<String> keys = List.of(key);
-                                    Long[] arr = new Long[]{record.getUserId(),1L};
+                                    Long[] arr = new Long[]{record.getUserId(), 1L};
                                     //lua脚本插入点赞
                                     Long execute = template.execute(LIKE_UPDATE_SCRIPT, keys, arr);
                                     if (execute == 0) {
@@ -149,7 +243,7 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
             } catch (Exception e) {
                 log.error(e.getMessage());
                 return false;
-            }finally {
+            } finally {
                 lock.unlock();
             }
         }

@@ -40,4 +40,14 @@ public class LikeRecordController {
             return service.like(record);
         }
     }
+
+    @Operation(description = "取消点赞")
+    @PostMapping("/unlike")
+    public BaseResponse<String> unLike(@RequestBody LikeRecordDto record){
+        if (record == null){
+            return new BaseResponse<>(Code.PARAM_ERROR);
+        }else {
+            return service.unLike(record);
+        }
+    }
 }

@@ -15,4 +15,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface LikeRecordService extends IService<LikeRecord> {
     BaseResponse<String> like(LikeRecordDto like);
+
+    BaseResponse<String> unLike(LikeRecordDto record);
 }

@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import javax.xml.bind.annotation.XmlSeeAlso;
 
@@ -34,4 +35,7 @@ public interface LikeRecordMapper extends BaseMapper<LikeRecord> {
             "values " +
             "(#{userId},#{targetType},#{targetId},#{status})")
     void insertByDto(LikeRecordDto record);
+
+    @Update("update like_record set status = 0 where id = #{id}")
+    void logicDelete(LikeRecord record);
 }
