@@ -8,8 +8,6 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
-
 /**
  * <p>
  * 点赞记录表（支持博客/评论） Mapper 接口
@@ -38,4 +36,12 @@ public interface LikeRecordMapper extends BaseMapper<LikeRecord> {
 
     @Update("update like_record set status = 0 where id = #{id}")
     void logicDelete(LikeRecord record);
+
+    @Select("select * " +
+            "from like_record " +
+            "where " +
+            "target_id = #{targetId} " +
+            "and target_type = ${targetType} " +
+            "and user_id = #{userId}")
+    LikeRecord selectLikeRecordExist(LikeRecordDto record);
 }
