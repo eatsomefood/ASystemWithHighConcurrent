@@ -4,6 +4,7 @@ import com.github.xiaoymin.knife4j.annotations.ApiOperationSupport;
 import com.star.highconcurrent.common.BaseResponse;
 import com.star.highconcurrent.common.Code;
 import com.star.highconcurrent.model.entity.Blog;
+import com.star.highconcurrent.model.entity.Page;
 import com.star.highconcurrent.service.BlogService;
 import com.star.highconcurrent.util.BloomFilter;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,7 +42,7 @@ public class BlogController {
 
     @Operation(description = "分页查询")
     @PostMapping("/list")
-    public BaseResponse<List<Blog>> getBlogList() {
-        return null;
+    public BaseResponse<List<Blog>> getBlogList(@RequestBody Page page) {
+        return service.getListByPage(page);
     }
 }

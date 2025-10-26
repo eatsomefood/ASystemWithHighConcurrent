@@ -9,7 +9,8 @@ public enum Code {
     USER_NOT_FOUND(403,"当前用户不存在，请尝试重新输入"),
     PASSWORD_ERROR(405,"用户密码错误，请重试"),
     PARAM_ERROR(406,"参数错误，请重试"),
-    DATABASE_ERROR(501,"数据库数据错误，请稍后再试");
+    DATABASE_ERROR(501,"数据库数据错误，请稍后再试"),
+    ERROR(500,"后端错误，请稍后再试");
 
     private final int code;
 
