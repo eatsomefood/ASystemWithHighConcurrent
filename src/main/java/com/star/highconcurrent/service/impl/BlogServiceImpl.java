@@ -42,10 +42,22 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements Bl
     @Resource
     private CommentMapper commentMapper;
 
+    @Resource
+    private RedisTemplate<String,Object> template;
 
 
+    /**
+     * TODO 在完成正常功能之后，尝试加入本地缓存
+     * 1: 先从redis中尝试查询当前博客数据
+     * 2：查询到，聚合数据并返回
+     * 3：如果没有查询到，这时候尝试查询mysql,如果当前博客存在，聚合数据，并异步刷入redis中
+     * 4:同时需要做缓存击穿，雪崩等场景考虑
+     * @param id
+     * @return
+     */
     @Override
     public BaseResponse getDeclareBlogById(long id) {
+        // 先尝试从redis中获取当前博客
         Blog blog = blogMapper.selectById(id);
         if (blog == null) {
             return new BaseResponse<>(Code.DATABASE_ERROR);

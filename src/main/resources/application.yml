@@ -18,7 +18,6 @@ com:
       secret-key: 5f4dcc3b5aa765d61d8327deb882cf99a61c41e383d3a7e92b64819fa0e264
       exp: 3600000
       token-name: authentication
-spring:
   application:
     name: HighConcurrent
   datasource:
