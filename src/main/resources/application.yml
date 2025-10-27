@@ -74,3 +74,12 @@ knife4j:
     enable-swagger-models: true
     swagger-model-name: 用户模块
 
+logging:
+  level:
+    org:
+      springframework:
+        web:
+          servlet:
+            mvc:
+              method:
+                annotation: DEBUG

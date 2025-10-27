@@ -26,6 +26,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements BlogService {
@@ -46,11 +47,11 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements Bl
     private UserMapper userMapper;
 
     @Resource
-    private RedisTemplate<String,Object> template;
+    private RedisTemplate<String, Object> template;
 
     private final Cache blogCache;
 
-    public BlogServiceImpl(CacheManager manager){
+    public BlogServiceImpl(CacheManager manager) {
         this.blogCache = manager.getCache("blogCache");
     }
 
@@ -60,17 +61,28 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements Bl
      * 2：查询到，聚合数据并返回
      * 3：如果没有查询到，这时候尝试查询mysql,如果当前博客存在，聚合数据，并异步刷入redis中
      * 4:同时需要做缓存击穿，雪崩等场景考虑
+     *
      * @param id
      * @return
      */
     @Override
     public BaseResponse getDeclareBlogById(long id) {
         // 尝试从本地缓存中获取
-        blogCache.
+        Cache.ValueWrapper valueWrapper = blogCache.get(id);
+        if (valueWrapper != null && valueWrapper.get() != null) {
+            return new BaseResponse(Code.OK, valueWrapper.get());
+        }
+        // 没有从本地内存中查到，尝试查询redis
         // 先尝试从redis中获取当前博客
-        Blog blog = blogMapper.selectById(id);
+        Map<Object, Object> entries = template.opsForHash().entries(PathEnum.GET_BLOG.getPath() + id);
+        if (!entries.isEmpty()) {
+            BlogVo vo = BlogVo.getBlog(entries);
+            return new BaseResponse(Code.OK,vo);
+        }
+        // 缓存中也查不到，尝试到数据库中查询
+        Blog blog = blogMapper.selectSuccessById(id);
         if (blog == null) {
-            return new BaseResponse<>(Code.DATABASE_ERROR);
+            return new BaseResponse<>(Code.BLOG_NOT_FOUND);
         } else {
             BlogVo vo = new BlogVo(blog);
             UserVo user = userMapper.selectVoById(blog.getAuthorId());
@@ -78,17 +90,19 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements Bl
             BlogContent blogContent = blogContentMapper.selectContentByAuthorId(blog.getAuthorId());
             if (blogContent == null) {
                 log.error("当前文章内容不存在，请查看: " + blog.getId().toString());
-                return new BaseResponse(Code.DATABASE_ERROR);
+                return new BaseResponse(Code.CONTENT_NOT_FOUND);
             }
             vo.updateContent(blogContent);
             Page<Comment> page = new Page<>(0, pageSize);
             QueryWrapper<Comment> queryWrapper = Wrappers.<Comment>query().
                     eq("blog_id", blog.getId()).
-                    eq("status",1).
+                    eq("status", 1).
                     orderByDesc("created_at");
             Page<Comment> commentPage = commentMapper.selectPage(page, queryWrapper);
             List<Comment> records = commentPage.getRecords();
             vo.setComments(records);
+            // 查询完成后，尝试缓存到redis中
+            template.opsForHash().putAll(PathEnum.GET_BLOG.getPath() + vo.getId(), vo.getBlogMap());
             return new BaseResponse<>(Code.OK, vo);
         }
     }

@@ -1,5 +1,8 @@
 package com.star.highconcurrent.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
@@ -56,8 +59,16 @@ public class RedisConfig{
         GenericJackson2JsonRedisSerializer redisSerializer = new GenericJackson2JsonRedisSerializer();
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(redisSerializer);
-        redisTemplate.setHashValueSerializer(redisSerializer);
+        // 配置GenericJackson2JsonRedisSerializer，注册JavaTimeModule
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(
+                new ObjectMapper()
+                        .registerModule(new JavaTimeModule())  // 关键：注册Java 8日期模块
+                        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)  // 禁用时间戳格式
+        );
+
+        redisTemplate.setValueSerializer(serializer);
+        redisTemplate.setHashValueSerializer(serializer);  // 哈希值序列化也使用该配置
+        // 其他配置（key序列化器等）
         redisTemplate.afterPropertiesSet();
         return redisTemplate;
     }

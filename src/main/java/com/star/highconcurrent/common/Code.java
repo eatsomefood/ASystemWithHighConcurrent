@@ -16,7 +16,8 @@ public enum Code {
     LIKE_FAIL(502, "点赞失败"),
     UNLIKE_FAIL(503, "取消点赞失败"),
     BLOG_NOT_FOUND(504, "博客不存在"),
-    COMMENT_NOT_FOUND(505, "评论不存在");
+    COMMENT_NOT_FOUND(505, "评论不存在"),
+    CONTENT_NOT_FOUND(506,"内容不存在");
 
     private final int code;
 

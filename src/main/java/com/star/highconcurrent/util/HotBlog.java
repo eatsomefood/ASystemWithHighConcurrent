@@ -76,22 +76,7 @@ public class HotBlog implements CommandLineRunner {
         for (int i = 0; i < Math.min(records.size(), 50); i++) {
             // 拿到博客数据后，查询出博客的对应信息
             Blog blog = records.get(i);
-            BlogVo vo = new BlogVo(blog);
-            UserVo user = userMapper.selectVoById(blog.getAuthorId());
-            vo.updateUser(user);
-            BlogContent blogContent = blogContentMapper.selectContentByAuthorId(blog.getAuthorId());
-            if (blogContent == null) {
-                log.error("当前文章内容不存在，请查看: " + blog.getId().toString());
-            }
-            vo.updateContent(blogContent);
-            Page<Comment> page1 = new Page<>(0, pageSize);
-            QueryWrapper<Comment> queryWrapper1 = Wrappers.<Comment>query().
-                    eq("blog_id", blog.getId()).
-                    eq("status",1).
-                    orderByDesc("created_at");
-            Page<Comment> commentPage = commentMapper.selectPage(page1, queryWrapper1);
-            List<Comment> records1 = commentPage.getRecords();
-            vo.setComments(records1);
+            BlogVo vo = getBlogVo(blog);
             Cache blogCache = cacheManager.getCache("blogCache");
             if (blogCache != null) {
                 blogCache.put(blog.getId(),vo);
@@ -103,10 +88,33 @@ public class HotBlog implements CommandLineRunner {
             double score = record.getViewCount();
             ZSetOperations.TypedTuple<Object> typedTuple = new DefaultTypedTuple<>(record.getId(), score);
             tuples.add(typedTuple);
+            BlogVo blogVo = getBlogVo(record);
+            // 尝试加载blogVo到redis中
+            template.opsForHash().putAll(PathEnum.GET_BLOG.getPath() + record.getId(),blogVo.getBlogMap());
         }
         // 尝试加载到redis中
         template.opsForZSet().add(PathEnum.HOT_BLOG.getPath(), tuples);
         log.info("初始化redis , Blog排行榜完成");
+    }
+
+    private BlogVo getBlogVo(Blog blog) {
+        BlogVo vo = new BlogVo(blog);
+        UserVo user = userMapper.selectVoById(blog.getAuthorId());
+        vo.updateUser(user);
+        BlogContent blogContent = blogContentMapper.selectContentByAuthorId(blog.getAuthorId());
+        if (blogContent == null) {
+            log.error("当前文章内容不存在，请查看: " + blog.getId().toString());
+        }
+        vo.updateContent(blogContent);
+        Page<Comment> page1 = new Page<>(0, pageSize);
+        QueryWrapper<Comment> queryWrapper1 = Wrappers.<Comment>query().
+                eq("blog_id", blog.getId()).
+                eq("status",1).
+                orderByDesc("created_at");
+        Page<Comment> commentPage = commentMapper.selectPage(page1, queryWrapper1);
+        List<Comment> records1 = commentPage.getRecords();
+        vo.setComments(records1);
+        return vo;
     }
 
     @Override

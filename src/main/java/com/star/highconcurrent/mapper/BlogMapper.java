@@ -19,6 +19,9 @@ public interface BlogMapper extends BaseMapper<Blog> {
     )
     Cursor<Long> getAllBlogIdByCursor();
 
-    @Select("select * from blog where status = 2 and id = #{targetId}")
+    @Select("select * from blog where status = 1 and id = #{targetId}")
     Blog selectBlogExist(Long targetId);
+
+    @Select("select * from blog where status = 1 and id = #{id}")
+    Blog selectSuccessById(long id);
 }

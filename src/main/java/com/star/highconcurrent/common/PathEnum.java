@@ -5,7 +5,8 @@ public enum PathEnum {
     BLOG_LIKE("blog:like:"),
     COMMENT_LIKE("comment:like:"),
     LOCK_VALUE("lock:"),
-    HOT_BLOG("hot:blog");
+    HOT_BLOG("hot:blog"),
+    GET_BLOG("blog:content:");
 
     private final String path;
 
