@@ -109,6 +109,7 @@ public class HotBlog implements CommandLineRunner {
         Page<Comment> page1 = new Page<>(0, pageSize);
         QueryWrapper<Comment> queryWrapper1 = Wrappers.<Comment>query().
                 eq("blog_id", blog.getId()).
+                eq("parent_id",0).
                 eq("status",1).
                 orderByDesc("created_at");
         Page<Comment> commentPage = commentMapper.selectPage(page1, queryWrapper1);

@@ -1,7 +1,9 @@
 package com.star.highconcurrent.util;
 
 import cn.hutool.bloomfilter.BitMapBloomFilter;
+import cn.hutool.bloomfilter.BloomFilterUtil;
 import com.star.highconcurrent.mapper.BlogMapper;
+import com.star.highconcurrent.mapper.CommentMapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.cursor.Cursor;
@@ -17,12 +19,12 @@ import java.util.List;
 
 @Slf4j
 @Component
-public class BlogBloomFilter implements CommandLineRunner {
-
-    @Value("${com.star.bloom-filter.blog.miss-precent:0.1}")
-    private double missPrecent;
+public class CommentBloomFilter implements CommandLineRunner {
 
     private Long dataSize = 0L;
+
+    @Value("${com.star.bloom-filter.comment.miss-precent:0.1}")
+    private double missPrecent;
 
     private BitMapBloomFilter filter;
 
@@ -37,10 +39,10 @@ public class BlogBloomFilter implements CommandLineRunner {
             // 分批次获取，防止数据过大
             // 初始化列表，避免反复扩容
             List<Long> list = new ArrayList<>(1000);
-            BlogMapper blogMapper = sqlSession.getMapper(BlogMapper.class);
-            int count = blogMapper.getCount();
+            CommentMapper mapper = sqlSession.getMapper(CommentMapper.class);
+            int count = mapper.getCount();
             filter = new BitMapBloomFilter(count);
-            cursor = blogMapper.getAllBlogIdByCursor();
+            cursor = mapper.getAllBlogIdByCursor();
             for (Long id : cursor) {
                 list.add(id);
                 if (list.size() >= 1000) {
@@ -56,7 +58,7 @@ public class BlogBloomFilter implements CommandLineRunner {
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
-            log.info("当前数据库博客总数为:{}", dataSize);
+            log.info("当前数据库评论总数为:{}",dataSize);
             if (cursor != null) {
                 try {
                     cursor.close();
@@ -74,7 +76,7 @@ public class BlogBloomFilter implements CommandLineRunner {
         }
     }
 
-    public void addData(long id) {
+    public void addData(long id){
         filter.add(String.valueOf(id));
     }
 
@@ -84,8 +86,12 @@ public class BlogBloomFilter implements CommandLineRunner {
         initFilter();
     }
 
-    public boolean isValid(Long id) {
+    public boolean isValid(Long id){
         return filter.contains(String.valueOf(id));
+    }
+
+    public long dataSize(){
+        return dataSize;
     }
 
 }

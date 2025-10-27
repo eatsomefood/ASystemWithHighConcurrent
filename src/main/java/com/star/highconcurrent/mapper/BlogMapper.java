@@ -24,4 +24,10 @@ public interface BlogMapper extends BaseMapper<Blog> {
 
     @Select("select * from blog where status = 1 and id = #{id}")
     Blog selectSuccessById(long id);
+
+    @Select("select like_count from blog where status = 1 and id = #{targetId}")
+    int selectLike(Long targetId);
+
+    @Select("select COUNT(*) from blog")
+    int getCount();
 }

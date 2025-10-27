@@ -14,7 +14,10 @@ com:
         access-time: 1
         write-time: 2
     bloom-filter:
-      size: 10000
+      comment:
+        miss-precent: 0.1
+      blog:
+        miss-precent: 0.1
     retry:
       retry-size: 3
       retry-ttl: 300

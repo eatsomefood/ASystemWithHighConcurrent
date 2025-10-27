@@ -5,6 +5,7 @@ import com.star.highconcurrent.model.entity.Comment;
 import com.star.highconcurrent.model.entity.LikeRecord;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.cursor.Cursor;
 
 /**
  * <p>
@@ -20,4 +21,12 @@ public interface CommentMapper extends BaseMapper<Comment> {
     @Select("select * from comment where status = 1 and id = #{targetId}")
     Comment selectCommentExist(Long targetId);
 
+    @Select("select like_count from comment where status = 1 and id = #{targetId}")
+    int selectLike(Long targetId);
+
+    @Select("select id from comment where status = 1")
+    Cursor<Long> getAllBlogIdByCursor();
+
+    @Select("select COUNT(*) from comment")
+    int getCount();
 }

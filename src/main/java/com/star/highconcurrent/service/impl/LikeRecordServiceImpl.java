@@ -83,18 +83,6 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
      */
     @Override
     public BaseResponse<String> like(LikeRecordDto record) {
-        // 先查数据库有没有这个博客
-        if (record.getTargetType() == 1){
-            Blog blog = blogMapper.selectBlogExist(record.getTargetId());
-            if (blog == null){
-                return new BaseResponse<>(Code.BLOG_NOT_FOUND);
-            }
-        }else {
-            Comment Comment = commentMapper.selectCommentExist(record.getTargetId());
-            if (Comment == null){
-                return new BaseResponse<>(Code.COMMENT_NOT_FOUND);
-            }
-        }
         int currentRetrySize = 0;
         boolean success = false;
         while (currentRetrySize < retrySize) {
@@ -122,18 +110,6 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
      */
     @Override
     public BaseResponse<String> unLike(LikeRecordDto record) {
-        // 先查数据库有没有这个博客
-        if (record.getTargetType() == 1){
-            Blog blog = blogMapper.selectBlogExist(record.getTargetId());
-            if (blog == null){
-                return new BaseResponse<>(Code.BLOG_NOT_FOUND);
-            }
-        }else {
-            Comment Comment = commentMapper.selectCommentExist(record.getTargetId());
-            if (Comment == null){
-                return new BaseResponse<>(Code.COMMENT_NOT_FOUND);
-            }
-        }
         int currentRetrySize = 0;
         boolean success = false;
         while (currentRetrySize < retrySize) {
@@ -152,18 +128,18 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
     }
 
     public boolean doUnLike(LikeRecordDto record) {
-        // 先查看当前用户是否点赞过
-        String lockKey = PathEnum.LOCK_VALUE.getPath() + PREFIX + record.getUserId();
-        // 1.先查redis,没有再查mysql
         String key;
+        String blogOrCommentLikeCountKey;
+        String userLikeBlogOrCommentKey = PathEnum.USER_LIKE.getPath() + record.getUserId();
         if (record.getTargetType() == 1) {
             key = PathEnum.BLOG_LIKE.getPath() + record.getTargetId();
+            blogOrCommentLikeCountKey = PathEnum.BLOG_LIKE_COUNT.getPath() + record.getTargetId();
         } else {
             key = PathEnum.COMMENT_LIKE.getPath() + record.getTargetId();
+            blogOrCommentLikeCountKey = PathEnum.COMMENT_LIKE_COUNT.getPath() + record.getTargetId();
         }
         // 查看是否点赞
         boolean member = Boolean.TRUE.equals(template.opsForSet().isMember(key, record.getUserId()));
-        // 点赞过，返回
         if (!member) {
             // 没点赞过，看看mysql有没有记录
             LikeRecord currentDBRecord = mapper.selectLikeByRecord(record);
@@ -173,114 +149,93 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
             }
             return true;
         } else {
-            // 尝试同时更改redis和mysql
-            RLock lock = client.getLock(lockKey);
             try {
-                boolean isLock = lock.tryLock();
-                if (isLock) {
-                    // 获取锁成功
-                    // 开始写入redis跟mysql中
-                    LikeRecord currentDBRecord = mapper.selectLikeByRecord(record);
-                    // 没点赞过，获取分布式锁后，开始同步刷入
-                    // 开始mysql事务
-                    transactionTemplate.execute(new TransactionCallback<Boolean>() {
-
-                        @Override
-                        public Boolean doInTransaction(TransactionStatus status) {
-                            try {
-                                List<String> keys = List.of(key);
-                                Long[] arr = new Long[]{record.getUserId(), 0L};
-                                //lua脚本插入点赞
-                                Long execute = template.execute(LIKE_UPDATE_SCRIPT, keys, arr);
-                                if (execute == 0) {
-                                    // 脚本执行失败
-                                    return false;
-                                } else {
-                                    // 继续执行mysql逻辑
-                                    mapper.logicDelete(currentDBRecord);
-                                }
-                                return true;
-                            } catch (Exception e) {
-                                log.error("当前点赞执行失败:{}" + "/n" + record.toString(), e);
-                                throw new RuntimeException(e);
-                            }
-                        }
-                    });
+                // 开始写入redis跟mysql中
+                LikeRecord currentDBRecord = mapper.selectLikeByRecord(record);
+                try {
+                    int likeCount;
+                    if (record.getStatus() == 1) {
+                        likeCount = blogMapper.selectLike(record.getTargetId());
+                    } else {
+                        likeCount = commentMapper.selectLike(record.getTargetId());
+                    }
+                    List<String> keys = List.of(key, blogOrCommentLikeCountKey, userLikeBlogOrCommentKey);
+                    Long[] arr = new Long[]{record.getUserId(), record.getTargetId(), 0L, (long) likeCount};
+                    //lua脚本插入点赞
+                    Long execute = template.execute(LIKE_UPDATE_SCRIPT, keys, arr);
+                    if (execute == 0) {
+                        // 脚本执行失败
+                        return false;
+                    } else {
+                        // 继续执行mysql逻辑
+                        mapper.logicDelete(currentDBRecord);
+                    }
+                    return true;
+                } catch (Exception e) {
+                    log.error("当前点赞执行失败:{}" + "/n" + record.toString(), e);
+                    throw new RuntimeException(e);
                 }
             } catch (Exception e) {
                 log.error(e.getMessage());
                 return false;
-            } finally {
-                lock.unlock();
             }
         }
-        return false;
     }
 
     public boolean doLike(LikeRecordDto record) {
         // 先查看当前用户是否点赞过
-        String lockKey = PathEnum.LOCK_VALUE.getPath() + PREFIX + record.getUserId();
         // 1.先查redis,没有再查mysql
         String key;
+        String blogOrCommentLikeCountKey;
+        String userLikeBlogOrCommentKey = PathEnum.USER_LIKE.getPath() + record.getUserId();
         if (record.getTargetType() == 1) {
             key = PathEnum.BLOG_LIKE.getPath() + record.getTargetId();
+            blogOrCommentLikeCountKey = PathEnum.BLOG_LIKE_COUNT.getPath() + record.getTargetId();
         } else {
             key = PathEnum.COMMENT_LIKE.getPath() + record.getTargetId();
+            blogOrCommentLikeCountKey = PathEnum.COMMENT_LIKE_COUNT.getPath() + record.getTargetId();
         }
         // 查看是否点赞
         boolean member = Boolean.TRUE.equals(template.opsForSet().isMember(key, record.getUserId()));
         // 点赞过，返回
         if (member) {
-            // 没点赞过，尝试获取分布式锁，然后进行点赞
             return true;
         } else {
             // 尝试查看mysql中是否有点赞记录
-            RLock lock = client.getLock(lockKey);
             try {
-                boolean isLock = lock.tryLock();
-                if (isLock) {
-                    // 获取锁成功
-                    // 开始写入redis跟mysql中
-                    LikeRecord currentDBRecord = mapper.selectLikeByRecord(record);
-                    if (currentDBRecord != null) {
-                        // 点赞成功，但是没有成功刷入redis，尝试刷入后返回
-                        template.opsForSet().add(key, record.getUserId());
-                        return true;
+                // 开始写入redis跟mysql中
+                LikeRecord currentDBRecord = mapper.selectLikeByRecord(record);
+                try {
+                    int likeCount;
+                    if (record.getStatus() == 1) {
+                        likeCount = blogMapper.selectLike(record.getTargetId());
                     } else {
-                        // 没点赞过，获取分布式锁后，开始同步刷入
-                        // 开始mysql事务
-                        transactionTemplate.execute(new TransactionCallback<Boolean>() {
-
-                            @Override
-                            public Boolean doInTransaction(TransactionStatus status) {
-                                try {
-                                    List<String> keys = List.of(key);
-                                    Long[] arr = new Long[]{record.getUserId(), 1L};
-                                    //lua脚本插入点赞
-                                    Long execute = template.execute(LIKE_UPDATE_SCRIPT, keys, arr);
-                                    if (execute == 0) {
-                                        // 脚本执行失败
-                                        return false;
-                                    } else {
-                                        // 继续执行mysql逻辑
-                                        mapper.insertByDto(record);
-                                    }
-                                    return true;
-                                } catch (Exception e) {
-                                    log.error("当前点赞执行失败:{}" + "/n" + record.toString(), e);
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                        });
+                        likeCount = commentMapper.selectLike(record.getTargetId());
                     }
+                    List<String> keys = List.of(key, blogOrCommentLikeCountKey, userLikeBlogOrCommentKey);
+                    Long[] arr = new Long[]{record.getUserId(), record.getTargetId(), 1L, (long) likeCount};
+                    //lua脚本插入点赞
+                    Long execute = template.execute(LIKE_UPDATE_SCRIPT, keys, arr);
+                    if (execute == 0) {
+                        // 脚本执行失败
+                        return false;
+                    } else {
+                        // 继续执行mysql逻辑
+                        if (currentDBRecord != null) {
+                            return true;
+                        } else {
+                            mapper.insertByDto(record);
+                        }
+                    }
+                    return true;
+                } catch (Exception e) {
+                    log.error("当前点赞执行失败:{}" + "/n" + record.toString(), e);
+                    throw new RuntimeException(e);
                 }
             } catch (Exception e) {
                 log.error(e.getMessage());
                 return false;
-            } finally {
-                lock.unlock();
             }
         }
-        return false;
     }
 }

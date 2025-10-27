@@ -7,6 +7,7 @@ import com.star.highconcurrent.model.dto.LikeRecordDto;
 import com.star.highconcurrent.model.entity.LikeRecord;
 import com.star.highconcurrent.service.LikeRecordService;
 import com.star.highconcurrent.util.BlogBloomFilter;
+import com.star.highconcurrent.util.CommentBloomFilter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -33,12 +34,18 @@ public class LikeRecordController {
     private LikeRecordService service;
 
     @Resource
-    private BlogBloomFilter filter;
+    private BlogBloomFilter blogBloomFilter;
+
+    @Resource
+    private CommentBloomFilter commentBloomFilter;
 
     @Operation(description = "点赞")
     @PostMapping("/like")
     public BaseResponse<String> like(@RequestBody LikeRecordDto record) {
-        if (record == null || (record.getTargetType() == 1 && !filter.isValid(record.getTargetId()))) {
+        if (
+                record == null
+                        || (record.getTargetType() == 1 && !blogBloomFilter.isValid(record.getTargetId()))
+                        || (record.getTargetType() == 2 && !commentBloomFilter.isValid(record.getTargetId()))) {
             return new BaseResponse(Code.PARAM_ERROR);
         } else {
             return service.like(record);
@@ -48,8 +55,11 @@ public class LikeRecordController {
     @Operation(description = "取消点赞")
     @PostMapping("/unlike")
     public BaseResponse<String> unLike(@RequestBody LikeRecordDto record) {
-        if (record == null || (record.getTargetType() == 1 && !filter.isValid(record.getTargetId()))) {
-            return new BaseResponse<>(Code.PARAM_ERROR);
+        if (
+                record == null
+                        || (record.getTargetType() == 1 && !blogBloomFilter.isValid(record.getTargetId()))
+                        || (record.getTargetType() == 2 && !commentBloomFilter.isValid(record.getTargetId()))) {
+            return new BaseResponse(Code.PARAM_ERROR);
         } else {
             return service.unLike(record);
         }
