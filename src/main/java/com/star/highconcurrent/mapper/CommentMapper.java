@@ -19,4 +19,5 @@ public interface CommentMapper extends BaseMapper<Comment> {
 
     @Select("select * from comment where status = 1 and id = #{targetId}")
     Comment selectCommentExist(Long targetId);
+
 }

@@ -7,6 +7,12 @@ server:
       charset: UTF-8
 com:
   star:
+    blog:
+      cache:
+        local-size: 50
+        redis-size: 100
+        access-time: 1
+        write-time: 2
     bloom-filter:
       size: 10000
     retry:
@@ -18,6 +24,7 @@ com:
       secret-key: 5f4dcc3b5aa765d61d8327deb882cf99a61c41e383d3a7e92b64819fa0e264
       exp: 3600000
       token-name: authentication
+spring:
   application:
     name: HighConcurrent
   datasource:

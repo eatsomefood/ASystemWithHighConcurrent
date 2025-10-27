@@ -55,6 +55,11 @@ public class BlogVo implements Serializable {
         this.authorAvatar = user.get("avatar").toString();
     }
 
+    public void updateUser(UserVo user){
+        this.authorName = user.getNickName();
+        this.authorAvatar = user.getAvatar();
+    }
+
     public void updateContent(BlogContent content){
         this.content = content.getContent();
     }

@@ -4,7 +4,8 @@ public enum PathEnum {
     USER_LOGIN("user:login:"),
     BLOG_LIKE("blog:like:"),
     COMMENT_LIKE("comment:like:"),
-    LOCK_VALUE("lock:");
+    LOCK_VALUE("lock:"),
+    HOT_BLOG("hot:blog");
 
     private final String path;
 

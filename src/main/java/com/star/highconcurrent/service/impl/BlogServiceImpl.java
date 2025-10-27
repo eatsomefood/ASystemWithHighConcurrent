@@ -11,17 +11,17 @@ import com.star.highconcurrent.mapper.BlogContentMapper;
 import com.star.highconcurrent.mapper.BlogMapper;
 import com.star.highconcurrent.mapper.CommentMapper;
 import com.star.highconcurrent.mapper.UserMapper;
-import com.star.highconcurrent.model.entity.Blog;
-import com.star.highconcurrent.model.entity.BlogContent;
-import com.star.highconcurrent.model.entity.Comment;
-import com.star.highconcurrent.model.entity.LikeRecord;
+import com.star.highconcurrent.model.entity.*;
 import com.star.highconcurrent.model.vo.BlogVo;
+import com.star.highconcurrent.model.vo.UserVo;
 import com.star.highconcurrent.service.BlogService;
 import com.star.highconcurrent.util.UserContext;
 import jakarta.annotation.Resource;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -43,8 +43,16 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements Bl
     private CommentMapper commentMapper;
 
     @Resource
+    private UserMapper userMapper;
+
+    @Resource
     private RedisTemplate<String,Object> template;
 
+    private final Cache blogCache;
+
+    public BlogServiceImpl(CacheManager manager){
+        this.blogCache = manager.getCache("blogCache");
+    }
 
     /**
      * TODO 在完成正常功能之后，尝试加入本地缓存
@@ -57,13 +65,16 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements Bl
      */
     @Override
     public BaseResponse getDeclareBlogById(long id) {
+        // 尝试从本地缓存中获取
+        blogCache.
         // 先尝试从redis中获取当前博客
         Blog blog = blogMapper.selectById(id);
         if (blog == null) {
             return new BaseResponse<>(Code.DATABASE_ERROR);
         } else {
             BlogVo vo = new BlogVo(blog);
-            vo.updateUser(UserContext.getUser());
+            UserVo user = userMapper.selectVoById(blog.getAuthorId());
+            vo.updateUser(user);
             BlogContent blogContent = blogContentMapper.selectContentByAuthorId(blog.getAuthorId());
             if (blogContent == null) {
                 log.error("当前文章内容不存在，请查看: " + blog.getId().toString());
@@ -73,6 +84,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements Bl
             Page<Comment> page = new Page<>(0, pageSize);
             QueryWrapper<Comment> queryWrapper = Wrappers.<Comment>query().
                     eq("blog_id", blog.getId()).
+                    eq("status",1).
                     orderByDesc("created_at");
             Page<Comment> commentPage = commentMapper.selectPage(page, queryWrapper);
             List<Comment> records = commentPage.getRecords();
