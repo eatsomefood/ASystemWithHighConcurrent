@@ -196,46 +196,41 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
             blogOrCommentLikeCountKey = PathEnum.COMMENT_LIKE_COUNT.getPath() + record.getTargetId();
         }
         // 查看是否点赞
-        boolean member = Boolean.TRUE.equals(template.opsForSet().isMember(key, record.getUserId()));
         // 点赞过，返回
-        if (member) {
-            return true;
-        } else {
-            // 尝试查看mysql中是否有点赞记录
+        // 尝试查看mysql中是否有点赞记录
+        try {
+            // 开始写入redis跟mysql中
+            LikeRecord currentDBRecord = mapper.selectLikeByRecord(record);
             try {
-                // 开始写入redis跟mysql中
-                LikeRecord currentDBRecord = mapper.selectLikeByRecord(record);
-                try {
-                    int likeCount;
-                    if (record.getStatus() == 1) {
-                        likeCount = blogMapper.selectLike(record.getTargetId());
-                    } else {
-                        likeCount = commentMapper.selectLike(record.getTargetId());
-                    }
-                    List<String> keys = List.of(key, blogOrCommentLikeCountKey, userLikeBlogOrCommentKey);
-                    Long[] arr = new Long[]{record.getUserId(), record.getTargetId(), 1L, (long) likeCount};
-                    //lua脚本插入点赞
-                    Long execute = template.execute(LIKE_UPDATE_SCRIPT, keys, arr);
-                    if (execute == 0) {
-                        // 脚本执行失败
-                        return false;
-                    } else {
-                        // 继续执行mysql逻辑
-                        if (currentDBRecord != null) {
-                            return true;
-                        } else {
-                            mapper.insertByDto(record);
-                        }
-                    }
-                    return true;
-                } catch (Exception e) {
-                    log.error("当前点赞执行失败:{}" + "/n" + record.toString(), e);
-                    throw new RuntimeException(e);
+                int likeCount;
+                if (record.getStatus() == 1) {
+                    likeCount = blogMapper.selectLike(record.getTargetId());
+                } else {
+                    likeCount = commentMapper.selectLike(record.getTargetId());
                 }
+                List<String> keys = List.of(key, blogOrCommentLikeCountKey, userLikeBlogOrCommentKey);
+                Long[] arr = new Long[]{record.getUserId(), record.getTargetId(), 1L, (long) likeCount};
+                //lua脚本插入点赞
+                Long execute = template.execute(LIKE_UPDATE_SCRIPT, keys, arr);
+                if (execute == 0) {
+                    // 脚本执行失败
+                    return false;
+                } else {
+                    // 继续执行mysql逻辑
+                    if (currentDBRecord != null) {
+                        return true;
+                    } else {
+                        mapper.insertByDto(record);
+                    }
+                }
+                return true;
             } catch (Exception e) {
-                log.error(e.getMessage());
-                return false;
+                log.error("当前点赞执行失败:{}" + "/n" + record.toString(), e);
+                throw new RuntimeException(e);
             }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return false;
         }
     }
 }

@@ -6,6 +6,7 @@ import com.star.highconcurrent.model.entity.LikeRecord;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 import org.apache.ibatis.cursor.Cursor;
 import org.apache.ibatis.mapping.ResultSetType;
 
@@ -30,4 +31,7 @@ public interface BlogMapper extends BaseMapper<Blog> {
 
     @Select("select COUNT(*) from blog")
     int getCount();
+
+    @Update("update blog set like_count = #{count} where id = #{targetId}")
+    void updateLikeCount(Long targetId, int count);
 }

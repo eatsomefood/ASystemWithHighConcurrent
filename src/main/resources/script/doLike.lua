@@ -23,6 +23,12 @@ if targetStatus ~= "0" and targetStatus ~= "1" then
     return 0  -- 非法状态返回0
 end
 
+local success = redis.call("SISMEMBER",likeSetKey,userId);
+
+if success and targetStatus == "1" then
+    return -1;
+end
+
 local status = redis.call("HEXISTS", blogOrCommentLikeCountKey, "like")
 
 if status == 0 then
@@ -43,8 +49,8 @@ end
 -- 处理点赞操作（targetStatus == "1"）
 -- 直接添加用户，SADD会自动忽略已存在的元素，无需提前判断
 redis.call("SADD", likeSetKey, userId)
--- 点赞数量减一
+-- 点赞数量加一
 redis.call("HINCRBY", blogOrCommentLikeCountKey, "like", 1)
--- 用户点赞移除
-redis.call("ZADD", userLikeBlogOrCommentKey, "NX", millisecondTimestamp, blogOrCommentId)
+-- 用户点赞增加
+redis.call("ZADD", userLikeBlogOrCommentKey, millisecondTimestamp, blogOrCommentId)
 return -1

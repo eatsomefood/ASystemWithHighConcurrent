@@ -3,7 +3,7 @@
     <property name="LOG_HOME" value="E:\workspace\ASystemWithHighConcurrent\HighConcurrent\log" />
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
     <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
-    <root level="INFO">
+    <root level="DEBUG">
         <appender-ref ref="CONSOLE"/>
     </root>
     <logger name="org.springframework.web" level="DEBUG"/>

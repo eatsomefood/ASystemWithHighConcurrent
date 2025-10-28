@@ -5,6 +5,7 @@ import com.star.highconcurrent.model.entity.Comment;
 import com.star.highconcurrent.model.entity.LikeRecord;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 import org.apache.ibatis.cursor.Cursor;
 
 /**
@@ -29,4 +30,7 @@ public interface CommentMapper extends BaseMapper<Comment> {
 
     @Select("select COUNT(*) from comment")
     int getCount();
+
+    @Update("update comment set like_count = #{count} where id = #{targetId}")
+    void updateLikeCount(Long targetId, int count);
 }
