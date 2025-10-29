@@ -42,6 +42,12 @@ spring:
       port: 6379
       timeout: 5000
       password: 123456
+  rabbitmq:
+    host: 192.168.220.128
+    port: 5672
+    virtual-host: /
+    username: star
+    password: 123
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true # 开启驼峰映射
