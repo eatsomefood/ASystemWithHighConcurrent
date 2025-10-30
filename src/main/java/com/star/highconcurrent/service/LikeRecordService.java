@@ -5,6 +5,8 @@ import com.star.highconcurrent.model.dto.LikeRecordDto;
 import com.star.highconcurrent.model.entity.LikeRecord;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.List;
+
 /**
  * <p>
  * 点赞记录表（支持博客/评论） 服务类
@@ -17,4 +19,9 @@ public interface LikeRecordService extends IService<LikeRecord> {
     BaseResponse<String> like(LikeRecordDto like);
 
     BaseResponse<String> unLike(LikeRecordDto record);
+
+    BaseResponse<String> getMessageCount(String userLikeDeadExchange);
+
+    BaseResponse<List<LikeRecordDto>> getMessage(String userLikeDeadQueue,int size, boolean keepInQueue);
+
 }

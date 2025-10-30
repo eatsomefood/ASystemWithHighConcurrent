@@ -1,6 +1,8 @@
 package com.star.highconcurrent.config;
 
 import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -175,5 +177,14 @@ public class RabbitMqConfig {
                 .to(exchange)
                 .with(routingKey)
                 .noargs();
+    }
+
+    // 手动创建 RabbitAdmin，依赖 ConnectionFactory
+    @Bean
+    public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
+        RabbitAdmin rabbitAdmin = new RabbitAdmin(connectionFactory);
+        // 启用自动声明（可选，根据需求）
+        rabbitAdmin.setAutoStartup(true);
+        return rabbitAdmin;
     }
 }

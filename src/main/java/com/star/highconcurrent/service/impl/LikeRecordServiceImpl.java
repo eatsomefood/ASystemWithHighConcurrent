@@ -17,7 +17,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.QueueInformation;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -28,8 +31,10 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.BaseStream;
 
 /**
  * <p>
@@ -71,6 +76,9 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
     @Resource
     private RabbitTemplate rabbitTemplate;
 
+    @Resource
+    private RabbitAdmin rabbitAdmin;
+
     private static final DefaultRedisScript<Long> LIKE_UPDATE_SCRIPT;
 
     static {
@@ -110,6 +118,49 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
             return new BaseResponse<>(Code.UNLIKE_SUCCESS);
         }
         return new BaseResponse<>(Code.LIKE_FAIL);
+    }
+
+    @Override
+    public BaseResponse<String> getMessageCount(String queue) {
+        try {
+            QueueInformation queueInfo = rabbitAdmin.getQueueInfo(queue);
+            if (queueInfo == null) {
+                return new BaseResponse<>(Code.SERVER_MQ_CONFIG_ERROR, queue);
+            }
+            return new BaseResponse<>(Code.OK, String.valueOf(queueInfo.getMessageCount()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new BaseResponse<>(Code.SERVER_MQ_CONFIG_ERROR, e.getMessage());
+        }
+    }
+
+    @Override
+    public BaseResponse<List<LikeRecordDto>> getMessage(String userLikeDeadQueue, int size, boolean keepInQueue) {
+        List<LikeRecordDto> messages = new ArrayList<>();
+        if (size == 0) {
+            size = 1;
+        }
+        try {
+            for (int i = 0; i < size; i++) {
+                Message receive = rabbitTemplate.receive(userLikeDeadQueue);
+                if (receive == null) {
+                    if (i == 0) {
+                        return new BaseResponse<>(Code.OK);
+                    }else {
+                        break;
+                    }
+                }
+                Object o = rabbitTemplate.getMessageConverter().fromMessage(receive);
+                messages.add((LikeRecordDto) o);
+                if (keepInQueue) {
+                    rabbitTemplate.send(userLikeDeadQueue, receive);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new BaseResponse<>(Code.ERROR);
+        }
+        return new BaseResponse<>(Code.OK,messages);
     }
 
     public boolean doUnLike(LikeRecordDto record) {

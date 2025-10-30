@@ -1,8 +1,10 @@
 package com.star.highconcurrent.controller;
 
 
+import com.fasterxml.jackson.databind.ser.Serializers;
 import com.star.highconcurrent.common.BaseResponse;
 import com.star.highconcurrent.common.Code;
+import com.star.highconcurrent.config.RabbitMqConfig;
 import com.star.highconcurrent.model.dto.LikeRecordDto;
 import com.star.highconcurrent.model.entity.LikeRecord;
 import com.star.highconcurrent.service.LikeRecordService;
@@ -11,11 +13,10 @@ import com.star.highconcurrent.util.CommentBloomFilter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
 
-import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
 
 /**
  * <p>
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author star
  * @since 2025-10-26
  */
+@Slf4j
 @Tag(name = "点赞记录")
 @RestController
 @RequestMapping("/like-record")
@@ -64,4 +66,34 @@ public class LikeRecordController {
             return service.unLike(record);
         }
     }
+
+    @Operation(description = "查看死信队列消息总数")
+    @GetMapping("/dead/{queue}")
+    public BaseResponse<String> getDeadMessageCount(@PathVariable("queue") String type) {
+        switch (type) {
+            case "like":
+                return service.getMessageCount(RabbitMqConfig.USER_LIKE_DEAD_QUEUE);
+            case "unlike":
+                return service.getMessageCount(RabbitMqConfig.USER_UNLIKE_DEAD_QUEUE);
+            default:
+                log.error("死信队列消息统计参数错误:{}", type);
+                return new BaseResponse<>(Code.PARAM_ERROR);
+        }
+    }
+
+    @Operation(description = "获取死信队列信息")
+    @GetMapping("/dead/single/{queue}")
+    public BaseResponse<List<LikeRecordDto>> getDeadMessage(@PathVariable("queue") String type, int size, boolean keepInQueue) {
+        switch (type) {
+            case "like":
+                return service.getMessage(RabbitMqConfig.USER_LIKE_DEAD_QUEUE, size, keepInQueue);
+            case "unlike":
+                return service.getMessage(RabbitMqConfig.USER_UNLIKE_DEAD_QUEUE, size, keepInQueue);
+            default:
+                log.error("死信队列消息统计参数错误:{}", type);
+                return new BaseResponse<>(Code.PARAM_ERROR);
+        }
+    }
+
+
 }
