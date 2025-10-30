@@ -99,3 +99,9 @@ logging:
             mvc:
               method:
                 annotation: DEBUG
+# 热 key 探测
+hotkey:
+  app-name: star
+  caffeine-size: 10000
+  push-period: 1000
+  etcd-server: http://localhost:2379

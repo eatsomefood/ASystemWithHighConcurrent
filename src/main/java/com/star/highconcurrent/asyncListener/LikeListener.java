@@ -34,7 +34,7 @@ public class LikeListener {
             channel.basicAck(tag, false);
         } catch (Exception e) {
             // 失败重试（超过最大次数后进入死信队列）
-            channel.basicNack(tag, false, true);
+            channel.basicNack(tag, false, false);
             throw new RuntimeException(e);
         }
     }
@@ -55,7 +55,7 @@ public class LikeListener {
             // 手动确认消息
         } catch (Exception e) {
             // 失败重试（超过最大次数后进入死信队列）
-            channel.basicNack(tag, false, true);
+            channel.basicNack(tag, false, false);
             throw new RuntimeException(e);
         }
     }
