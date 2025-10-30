@@ -5,7 +5,7 @@ import com.star.highconcurrent.common.Code;
 import com.star.highconcurrent.model.entity.Blog;
 import com.star.highconcurrent.model.entity.Page;
 import com.star.highconcurrent.service.BlogService;
-import com.star.highconcurrent.util.BlogBloomFilter;
+import com.star.highconcurrent.bloomFilter.BlogBloomFilter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
