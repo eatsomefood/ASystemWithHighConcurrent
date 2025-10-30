@@ -3,6 +3,8 @@ package com.star.highconcurrent.model.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 import java.io.Serializable;
+
+import com.star.highconcurrent.model.dto.LikeRecordDto;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -61,5 +63,13 @@ public class LikeRecord implements Serializable {
     @TableField("created_at")
     private LocalDateTime createdAt;
 
+    public static LikeRecord transferDtoToEntity(LikeRecordDto recordDto){
+        LikeRecord likeRecord = new LikeRecord();
+        likeRecord.setUserId(recordDto.getUserId());
+        likeRecord.setTargetType(recordDto.getTargetType());
+        likeRecord.setTargetId(recordDto.getTargetId());
+        likeRecord.setStatus(recordDto.getStatus());
+        return likeRecord;
+    }
 
 }

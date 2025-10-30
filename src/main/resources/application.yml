@@ -45,9 +45,16 @@ spring:
   rabbitmq:
     host: 192.168.220.128
     port: 5672
-    virtual-host: /
     username: star
     password: 123
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        retry:
+          enabled: true
+          max-attempts: 3
+        acknowledge-mode: manual  # 手动重试
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true # 开启驼峰映射

@@ -5,11 +5,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.io.Serializable;
+
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class LikeRecordDto {
+public class LikeRecordDto implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private Long userId;
 

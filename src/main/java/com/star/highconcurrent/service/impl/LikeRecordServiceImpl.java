@@ -3,6 +3,7 @@ package com.star.highconcurrent.service.impl;
 import com.star.highconcurrent.common.BaseResponse;
 import com.star.highconcurrent.common.Code;
 import com.star.highconcurrent.common.PathEnum;
+import com.star.highconcurrent.config.RabbitMqConfig;
 import com.star.highconcurrent.mapper.BlogMapper;
 import com.star.highconcurrent.mapper.CommentMapper;
 import com.star.highconcurrent.mapper.UserMapper;
@@ -16,6 +17,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -65,6 +68,9 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
     @Resource
     private TransactionTemplate transactionTemplate;
 
+    @Resource
+    private RabbitTemplate rabbitTemplate;
+
     private static final DefaultRedisScript<Long> LIKE_UPDATE_SCRIPT;
 
     static {
@@ -74,28 +80,16 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
     }
 
     /**
-     * TODO
-     * 当前是本地重试
-     * 再更新到mq后，实现死信队列重试
+     * q实现死信队列重试
      *
      * @param record
      * @return
      */
     @Override
     public BaseResponse<String> like(LikeRecordDto record) {
-        int currentRetrySize = 0;
-        boolean success = false;
-        while (currentRetrySize < retrySize) {
-            success = doLike(record);
-            if (success) {
-                return new BaseResponse<>(Code.LIKE_SUCCESS);
-            }
-            try {
-                Thread.sleep(retryTtl);
-                currentRetrySize++;
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+        boolean success = doLike(record);
+        if (success) {
+            return new BaseResponse<>(Code.LIKE_SUCCESS);
         }
         return new BaseResponse<>(Code.LIKE_FAIL);
     }
@@ -110,19 +104,10 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
      */
     @Override
     public BaseResponse<String> unLike(LikeRecordDto record) {
-        int currentRetrySize = 0;
         boolean success = false;
-        while (currentRetrySize < retrySize) {
-            success = doUnLike(record);
-            if (success) {
-                return new BaseResponse<>(Code.UNLIKE_SUCCESS);
-            }
-            try {
-                Thread.sleep(retryTtl);
-                currentRetrySize++;
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+        success = doUnLike(record);
+        if (success) {
+            return new BaseResponse<>(Code.UNLIKE_SUCCESS);
         }
         return new BaseResponse<>(Code.LIKE_FAIL);
     }
@@ -145,7 +130,20 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
             LikeRecord currentDBRecord = mapper.selectLikeByRecord(record);
             if (currentDBRecord != null) {
                 // 点赞成功，但是没有成功刷入redis，尝试刷入后返回
-                mapper.logicDelete(currentDBRecord);
+                rabbitTemplate.convertAndSend(
+                        RabbitMqConfig.USER_UNLIKE_EXCHANGE,
+                        RabbitMqConfig.USER_UNLIKE_ROUTING_KEY,
+                        record,
+                        new CorrelationData(
+                                record.getTargetType()
+                                        + ":"
+                                        + record.getTargetId()
+                                        + ":"
+                                        + record.getUserId()
+                                        + ":"
+                                        + System.currentTimeMillis()
+                        )
+                );
             }
             return true;
         } else {
@@ -168,7 +166,20 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
                         return false;
                     } else {
                         // 继续执行mysql逻辑
-                        mapper.logicDelete(currentDBRecord);
+                        rabbitTemplate.convertAndSend(
+                                RabbitMqConfig.USER_UNLIKE_EXCHANGE,
+                                RabbitMqConfig.USER_UNLIKE_ROUTING_KEY,
+                                record,
+                                new CorrelationData(
+                                        record.getTargetType()
+                                                + ":"
+                                                + record.getTargetId()
+                                                + ":"
+                                                + record.getUserId()
+                                                + ":"
+                                                + System.currentTimeMillis()
+                                )
+                        );
                     }
                     return true;
                 } catch (Exception e) {
@@ -220,7 +231,20 @@ public class LikeRecordServiceImpl extends ServiceImpl<LikeRecordMapper, LikeRec
                     if (currentDBRecord != null) {
                         return true;
                     } else {
-                        mapper.insertByDto(record);
+                        rabbitTemplate.convertAndSend(
+                                RabbitMqConfig.USER_LIKE_EXCHANGE,
+                                RabbitMqConfig.USER_LIKE_ROUTING_KEY,
+                                record,
+                                new CorrelationData(
+                                        record.getTargetType()
+                                                + ":"
+                                                + record.getTargetId()
+                                                + ":"
+                                                + record.getUserId()
+                                                + ":"
+                                                + System.currentTimeMillis()
+                                )
+                        );
                     }
                 }
                 return true;

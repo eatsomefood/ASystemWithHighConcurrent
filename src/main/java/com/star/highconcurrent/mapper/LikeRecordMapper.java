@@ -34,7 +34,10 @@ public interface LikeRecordMapper extends BaseMapper<LikeRecord> {
             "(#{userId},#{targetType},#{targetId},#{status})")
     void insertByDto(LikeRecordDto record);
 
-    @Update("update like_record set status = 0 where id = #{id}")
+    @Update("update like_record set status = 0 where " +
+            "user_id = #{userId} and " +
+            "target_type = #{targetType} and " +
+            "target_id = #{targetId}")
     void logicDelete(LikeRecord record);
 
     @Select("select * " +
@@ -44,4 +47,9 @@ public interface LikeRecordMapper extends BaseMapper<LikeRecord> {
             "and target_type = ${targetType} " +
             "and user_id = #{userId}")
     LikeRecord selectLikeRecordExist(LikeRecordDto record);
+
+    @Insert("insert into like_record(user_id, target_type, target_id, status) " +
+            "values (#{userId},#{targetType},#{targetId},#{status})")
+    void insertByEntity(LikeRecord record);
+
 }
